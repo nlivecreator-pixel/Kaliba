@@ -1,7 +1,6 @@
-# Kaliba Proxy Finder
-
 ![Kaliba Logo](img/kalibaproxy.jpg)
 
+# Kaliba Proxy Finder
 When your proxy stops working, Kaliba keeps you moving.
 
 ## Getting Started
