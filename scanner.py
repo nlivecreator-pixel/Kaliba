@@ -519,13 +519,20 @@ async def start_subscription_server(results):
 
 def generate_telegram_links(results: list[dict]):
     filename = f"telegram_proxies_{int(time.time())}.txt"
+    working_links = 0
     with open(filename, "w", encoding="utf-8") as f:
         for r in results:
             if r['type'] in ["SOCKS5", "SOCKS4"]:
                 # tg://socks?server=host&port=port
-                host, port = r['clean'].split(":", 1)
-                f.write(f"tg://socks?server={host}&port={port}\n")
-    success(f"Generated Telegram links in [{Colors.ACCENT}]{filename}[/]")
+                # Assumes r['clean'] is "host:port"
+                if ":" in r['clean']:
+                    host, port = r['clean'].split(":", 1)
+                    f.write(f"tg://socks?server={host}&port={port}\n")
+                    working_links += 1
+    if working_links > 0:
+        success(f"Generated {working_links} Telegram links in [{Colors.ACCENT}]{filename}[/]")
+    else:
+        danger("No compatible SOCKS proxies found to generate Telegram links.")
     console.print()
 
 def show_menu(results: list[dict]):
