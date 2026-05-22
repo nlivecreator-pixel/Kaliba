@@ -516,112 +516,10 @@ async def start_subscription_server(results):
     # This function is now deprecated in favor of run_server_thread
     pass
 
-def generate_reg_file(best_proxy: str):
-    filename = "open_code_proxy.reg"
-    content = f"""Windows Registry Editor Version 5.00
-
-[HKEY_CLASSES_ROOT\Directory\Background\shell\OpenCodeProxy]
-@="Open open code with proxy"
-"Icon"="C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe"
-
-[HKEY_CLASSES_ROOT\Directory\Background\shell\OpenCodeProxy\command]
-@="powershell.exe -NoExit -Command \\"$env:HTTP_PROXY='http://{best_proxy}'; $env:HTTPS_PROXY='https://{best_proxy}'; Set-Location -LiteralPath '%V'; opencode\\""
-
-[HKEY_CLASSES_ROOT\Directory\shell\OpenCodeProxy]
-@="Open open code with proxy"
-"Icon"="C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe"
-
-[HKEY_CLASSES_ROOT\Directory\shell\OpenCodeProxy\command]
-@="powershell.exe -NoExit -Command \\"$env:HTTP_PROXY='http://{best_proxy}'; $env:HTTPS_PROXY='https://{best_proxy}'; Set-Location -LiteralPath '%1'; opencode\\""
-"""
-    with open(filename, "w", encoding="utf-16") as f:
-        f.write(content)
-    info(f"Generated registry file: [{Colors.ACCENT}]{filename}[/]")
-    console.print()
-
-
-def install_opencode_context_menu():
-    """Add 'Open with OpenCode Proxy' to Windows context menu for .txt proxy list files."""
-    if sys.platform != "win32":
-        warning("Context menu integration is only available on Windows")
-        return False
-
-    try:
-        import winreg
-
-        # Determine Python executable and script paths
-        python_exe = sys.executable
-        script_path = os.path.abspath(__file__)
-
-        # Registry key for .txt file context menu
-        reg_path = r"SystemFileAssociations\.txt\shell\OpenCodeProxy"
-        command_path = reg_path + r"\command"
-
-        # Create the shell key
-        with winreg.CreateKey(winreg.HKEY_CLASSES_ROOT, reg_path) as key:
-            winreg.SetValue(key, "", winreg.REG_SZ, "Open with OpenCode Proxy")
-            winreg.SetValueEx(key, "Icon", 0, winreg.REG_SZ, python_exe)
-
-        # Create the command key
-        with winreg.CreateKey(winreg.HKEY_CLASSES_ROOT, command_path) as cmd_key:
-            command = f'"{python_exe}" "{script_path}" --load "%1"'
-            winreg.SetValue(cmd_key, "", winreg.REG_SZ, command)
-
-        success("'Open with OpenCode Proxy' added to context menu for .txt files")
-        info("Right-click any proxy list .txt file to open with this scanner")
-        return True
-
-    except PermissionError:
-        danger("Permission denied. Run as Administrator to install context menu.")
-        return False
-    except Exception as e:
-        danger(f"Failed to install context menu: {e}")
-        return False
-
-
-def uninstall_opencode_context_menu():
-    """Remove 'Open with OpenCode Proxy' from Windows context menu."""
-    if sys.platform != "win32":
-        warning("Context menu integration is only available on Windows")
-        return False
-
-    try:
-        import winreg
-
-        reg_path = r"SystemFileAssociations\.txt\shell\OpenCodeProxy"
-
-        # Recursively delete the key
-        def delete_tree(hive, subpath):
-            with winreg.OpenKey(hive, subpath, 0, winreg.KEY_ALL_ACCESS) as key:
-                i = 0
-                while True:
-                    try:
-                        subkey = winreg.EnumKey(key, i)
-                        delete_tree(hive, f"{subpath}\\{subkey}")
-                    except OSError:
-                        break
-                    i += 1
-            winreg.DeleteKey(hive, subpath)
-
-        delete_tree(winreg.HKEY_CLASSES_ROOT, reg_path)
-        success("'Open with OpenCode Proxy' removed from context menu")
-        return True
-
-    except FileNotFoundError:
-        warning("Context menu entry not found — nothing to remove")
-        return False
-    except PermissionError:
-        danger("Permission denied. Run as Administrator to remove context menu.")
-        return False
-    except Exception as e:
-        danger(f"Failed to remove context menu: {e}")
-        return False
-
 
 def show_menu(results: list[dict]):
     options = [
         "Save it in TXT",
-        "Save it in REG for OpenCode",
         "Start Subscription Server",
         "Exit"
     ]
@@ -658,12 +556,6 @@ def show_menu(results: list[dict]):
                 success(f"Exported {len(results)} proxies to [{Colors.ACCENT}]{filename}[/]")
                 time.sleep(2)
             elif choice == 1:
-                if results:
-                    generate_reg_file(results[0]['clean'])
-                else:
-                    danger("No working proxies to save to REG")
-                time.sleep(2)
-            elif choice == 2:
                 if not results:
                     danger("No working proxies to host")
                     time.sleep(2)
@@ -687,7 +579,7 @@ def show_menu(results: list[dict]):
                 except Exception as e:
                     danger(f"Failed to start server: {e}")
                     time.sleep(2)
-            elif choice == 3:
+            elif choice == 2:
                 break
 
 
