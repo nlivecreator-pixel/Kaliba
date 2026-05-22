@@ -344,10 +344,16 @@ async def verify_vless_with_xray(proxy: str, timeout: int = 10) -> bool:
 
 async def check_proxy(
     proxy: str,
+    protocol: str = "Http/Socks5",
     timeout: int = TIMEOUT,
 ) -> Optional[dict]:
     start = time.monotonic()
     proxy_type = detect_proxy_type(proxy)
+    
+    # If the user explicitly selected Socks5 Only, treat raw host:port as SOCKS5
+    if protocol == "Socks5 Only" and proxy_type == "HTTP":
+        proxy_type = "SOCKS5"
+        
     proxy_clean = normalize_proxy(proxy)
 
     # Truly verify VLESS using Xray binary
@@ -416,7 +422,7 @@ async def check_proxy(
     return None
 
 
-async def scan_proxies(proxies: list[str]) -> list[dict]:
+async def scan_proxies(proxies: list[str], protocol: str) -> list[dict]:
     results: list[dict] = []
     working: list[dict] = []
     console.print()
@@ -426,7 +432,7 @@ async def scan_proxies(proxies: list[str]) -> list[dict]:
 
         async def worker(p: str):
             async with sem:
-                result = await check_proxy(p)
+                result = await check_proxy(p, protocol=protocol)
                 if result:
                     working.append(result)
                 pb.update()
@@ -644,7 +650,7 @@ async def main():
         danger("Failed to fetch any proxies")
         return
 
-    results = await scan_proxies(proxies)
+    results = await scan_proxies(proxies, protocol)
     show_results(results)
     show_menu(results)
 
