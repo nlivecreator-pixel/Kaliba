@@ -517,9 +517,21 @@ async def start_subscription_server(results):
     pass
 
 
+def generate_telegram_links(results: list[dict]):
+    filename = f"telegram_proxies_{int(time.time())}.txt"
+    with open(filename, "w", encoding="utf-8") as f:
+        for r in results:
+            if r['type'] in ["SOCKS5", "SOCKS4"]:
+                # tg://socks?server=host&port=port
+                host, port = r['clean'].split(":", 1)
+                f.write(f"tg://socks?server={host}&port={port}\n")
+    success(f"Generated Telegram links in [{Colors.ACCENT}]{filename}[/]")
+    console.print()
+
 def show_menu(results: list[dict]):
     options = [
         "Save it in TXT",
+        "Generate Telegram Links",
         "Start Subscription Server",
         "Exit"
     ]
@@ -556,6 +568,12 @@ def show_menu(results: list[dict]):
                 success(f"Exported {len(results)} proxies to [{Colors.ACCENT}]{filename}[/]")
                 time.sleep(2)
             elif choice == 1:
+                if results:
+                    generate_telegram_links(results)
+                else:
+                    danger("No working proxies to generate links")
+                time.sleep(2)
+            elif choice == 2:
                 if not results:
                     danger("No working proxies to host")
                     time.sleep(2)
@@ -579,7 +597,7 @@ def show_menu(results: list[dict]):
                 except Exception as e:
                     danger(f"Failed to start server: {e}")
                     time.sleep(2)
-            elif choice == 2:
+            elif choice == 3:
                 break
 
 
