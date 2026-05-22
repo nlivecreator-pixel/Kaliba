@@ -56,6 +56,11 @@ PROTOCOL_SOURCES = {
         "https://raw.githubusercontent.com/monosans/proxy-list/main/proxies/http.txt",
         "https://raw.githubusercontent.com/rdavydov/proxy-list/main/proxies/http.txt",
     ],
+    "Socks5 Only": [
+        "https://raw.githubusercontent.com/TheSpeedX/PROXY-List/master/socks5.txt",
+        "https://raw.githubusercontent.com/ShiftyTR/Proxy-List/master/socks5.txt",
+        "https://raw.githubusercontent.com/monosans/proxy-list/main/proxies/socks5.txt",
+    ],
     "Vless": [
         "https://raw.githubusercontent.com/ebrasha/free-v2ray-public-list/refs/heads/main/vless_configs.txt",
     ],
